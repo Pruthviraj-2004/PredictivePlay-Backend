@@ -456,8 +456,10 @@ from django.db.models import Count
 
 class CommonLeaderboardRankingsView(APIView):
     def get(self, request, eventID):
-        # Filter leaderboards for the given event
-        leaderboards = Leaderboard.objects.filter(event__eventID=eventID).annotate(
+        # Fetch leaderboards with names "Global" and "Weekly" under the given eventID
+        leaderboards = Leaderboard.objects.filter(
+            event__eventID=eventID, leaderboardName__in=["Global", "Weekly"]
+        ).annotate(
             participant_count=Count("leaderboardmember")
         ).values("leaderboardID", "leaderboardName", "participant_count")
 

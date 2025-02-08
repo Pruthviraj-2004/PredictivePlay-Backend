@@ -167,7 +167,7 @@ class Submission(models.Model):
 class Leaderboard(models.Model):
     leaderboardID = models.AutoField(primary_key=True)
 
-    leaderboardName = models.CharField(max_length=32, unique=True)
+    leaderboardName = models.CharField(max_length=32)
     leaderboardPassword = models.CharField(max_length=16)
 
     event = models.ForeignKey(CricketTournament, on_delete=models.CASCADE, default=1)
