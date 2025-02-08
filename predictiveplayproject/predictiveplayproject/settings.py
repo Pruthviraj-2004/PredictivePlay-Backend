@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-5$_4nf1mg=8xpv&@xl**rk2qh699oo!f187-$-z#j^(=#3q2#y
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['predictiveplay.pythonanywhere.com','127.0.0.1']
 
 
 
