@@ -3,8 +3,10 @@ from .views import *
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+
     path("register/", RegisterView.as_view(), name="register"),
     path("register/step1/", RegisterStep1View.as_view(), name="register_step1"),
     path("register/step2/", RegisterStep2View.as_view(), name="register_step2"),
@@ -26,8 +28,8 @@ urlpatterns = [
     path("event/<int:eventID>/kpis/", EventKPIsView.as_view(), name="event-kpis"),
 
 
-    # path("common-leaderboard/rankings/", CommonLeaderboardRankingsView.as_view(), name="leaderboard-rankings"),
     path("common-leaderboard/rankings/<int:eventID>/", CommonLeaderboardRankingsView.as_view(), name="leaderboard-rankings"),
+    path("leaderboard/<int:leaderboardID>/user/<str:username>/", LeaderboardUserRankView.as_view(), name="leaderboard-user-rank"),
 
 
 

@@ -3,9 +3,7 @@ from .models import *
 
 @admin.register(UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
-    list_display = ('userID', 'username', 'name', 'email', 'score1', 'score2', 
-                    'is_in_global_leaderboard', 'is_in_weekly_leaderboard', 'createdAt', 'updatedAt')
-    list_filter = ('is_in_global_leaderboard', 'is_in_weekly_leaderboard', 'createdAt')
+    list_display = ('userID', 'username', 'name', 'email', 'createdAt', 'updatedAt')
     search_fields = ('username', 'name', 'email')
     readonly_fields = ('createdAt', 'updatedAt')
 
@@ -52,7 +50,7 @@ class WinnerMatchDetailsAdmin(admin.ModelAdmin):
 
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ("submissionID", "user", "match", "winningTeam", "mostRunsScorer", "mostWicketsTaker", "manOfTheMatch", "createdAt", "updatedAt")
+    list_display = ("submissionID", "user", "match", "winningTeam", "mostRunsScorer", "mostWicketsTaker", "manOfTheMatch", "submissionScores", "createdAt", "updatedAt")
     list_filter = ("user", "match", "winningTeam")
     search_fields = ("user__username", "match__team1__teamName", "match__team2__teamName", "winningTeam__teamName")
     ordering = ("-createdAt",)

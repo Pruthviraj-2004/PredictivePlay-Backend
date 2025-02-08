@@ -297,3 +297,11 @@ class UserOverallScoreGraphSerializer(serializers.ModelSerializer):
         model = Submission
         fields = ["match_id", "matchDate", "submissionScores"]
 
+
+#LeaderboardPage
+class LeaderboardUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username")
+
+    class Meta:
+        model = LeaderboardMember
+        fields = ["rank", "username", "points"]

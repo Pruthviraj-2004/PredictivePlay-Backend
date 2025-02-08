@@ -362,108 +362,17 @@ class UserEventSubmissionsView(APIView):
 
 #LeaderBoard page
 
-# class CommonLeaderboardRankingsView(APIView):
-#     def get(self, request):
-#         leaderboard_ids = ["1", "2"]
-        
-#         rankings = {leaderboard_id: [] for leaderboard_id in leaderboard_ids}
-
-#         recent_match = Match.objects.filter(matchDate__lte=now().date()).order_by("-matchDate", "-matchStartTime1st").first()
-
-#         users = User.objects.all()
-
-#         for user in users:
-#             user_scores = {lb_id: 0 for lb_id in leaderboard_ids}
-#             recent_gained_points = {lb_id: 0 for lb_id in leaderboard_ids}
-
-#             submissions = Submission.objects.filter(user=user)
-#             for submission in submissions:
-#                 for lb_id in leaderboard_ids:
-#                     user_scores[lb_id] += submission.submissionScores.get(lb_id, 0)
-
-#             if recent_match:
-#                 recent_submission = submissions.filter(match=recent_match).first()
-#                 if recent_submission:
-#                     for lb_id in leaderboard_ids:
-#                         recent_gained_points[lb_id] = recent_submission.submissionScores.get(lb_id, 0)
-
-#             for lb_id in leaderboard_ids:
-#                 if user_scores[lb_id] > 0 or recent_gained_points[lb_id] > 0:
-#                     rankings[lb_id].append({
-#                         "username": user.username,
-#                         "points": user_scores[lb_id],
-#                         "recent_gained_points": recent_gained_points[lb_id]
-#                     })
-
-#         for lb_id in leaderboard_ids:
-#             rankings[lb_id].sort(key=lambda x: x["points"], reverse=True)
-
-#             for rank, entry in enumerate(rankings[lb_id], start=1):
-#                 entry["rank"] = rank
-
-#         return Response(rankings, status=status.HTTP_200_OK)
-
 from django.db.models import Count
-
-# class CommonLeaderboardRankingsView(APIView):
-#     def get(self, request):
-#         leaderboards = Leaderboard.objects.filter(leaderboardID__in=[1, 2]).annotate(
-#             participant_count=Count("leaderboardmember")
-#         ).values("leaderboardID", "leaderboardName", "participant_count")
-
-#         leaderboard_data = []
-#         recent_match = Match.objects.filter(
-#             matchDate__lte=now().date()
-#         ).order_by("-matchDate", "-matchStartTime1st").first()
-
-#         for lb in leaderboards:
-#             rankings = (
-#                 LeaderboardMember.objects.filter(leaderboard__leaderboardID=lb["leaderboardID"])
-#                 .select_related("user")
-#                 .values("user__username", "points")
-#                 .order_by("-points", "user__username")
-#             )
-
-#             ranked_users = []
-#             for rank, entry in enumerate(rankings, start=1):
-#                 user = entry["user__username"]
-#                 points = entry["points"]
-                
-#                 recent_points = 0
-#                 if recent_match:
-#                     recent_submission = Submission.objects.filter(
-#                         user__username=user, match=recent_match
-#                     ).first()
-#                     if recent_submission:
-#                         recent_points = recent_submission.submissionScores.get(str(lb["leaderboardID"]), 0)
-
-#                 ranked_users.append({
-#                     "rank": rank,
-#                     "username": user,
-#                     "points": points,
-#                     "recentGainedPoints": recent_points
-#                 })
-
-#             leaderboard_data.append({
-#                 "leaderboardID": lb["leaderboardID"],
-#                 "leaderboardName": lb["leaderboardName"],
-#                 "participantCount": lb["participant_count"],
-#                 "rankings": ranked_users
-#             })
-
-#         return Response({"leaderboards": leaderboard_data}, status=status.HTTP_200_OK)
-
 
 class CommonLeaderboardRankingsView(APIView):
     def get(self, request, eventID):
-        # Fetch leaderboards with names "Global" and "Weekly" under the given eventID
         leaderboards = Leaderboard.objects.filter(
             event__eventID=eventID, leaderboardName__in=["Global", "Weekly"]
         ).annotate(
             participant_count=Count("leaderboardmember")
         ).values("leaderboardID", "leaderboardName", "participant_count")
 
-        leaderboard_data = []
+        leaderboard_data = {"Global": [], "Weekly": []}
         recent_match = Match.objects.filter(
             event__eventID=eventID, 
             matchDate__lte=now().date()
@@ -500,11 +409,74 @@ class CommonLeaderboardRankingsView(APIView):
                     "recentGainedPoints": recent_points
                 })
 
-            leaderboard_data.append({
+            leaderboard_info = {
                 "leaderboardID": lb["leaderboardID"],
                 "leaderboardName": lb["leaderboardName"],
                 "participantCount": lb["participant_count"],
                 "rankings": ranked_users
-            })
+            }
 
-        return Response({"leaderboards": leaderboard_data}, status=status.HTTP_200_OK)
+            if lb["leaderboardName"] == "Global":
+                leaderboard_data["Global"].append(leaderboard_info)
+            elif lb["leaderboardName"] == "Weekly":
+                leaderboard_data["Weekly"].append(leaderboard_info)
+
+        return Response(leaderboard_data, status=status.HTTP_200_OK)
+      
+
+class LeaderboardUserRankView(APIView):
+    def get(self, request, leaderboardID, username):
+        try:
+            leaderboard = Leaderboard.objects.get(leaderboardID=leaderboardID)
+
+            recent_match = Match.objects.filter(
+                event=leaderboard.event, matchDate__lte=now().date()
+            ).order_by("-matchDate", "-matchStartTime1st").first()
+
+            leaderboard_members = LeaderboardMember.objects.filter(
+                leaderboard=leaderboard
+            ).select_related("user").order_by("-points", "user__username")
+
+            if not leaderboard_members.exists():
+                return Response({"message": "No members found in this leaderboard"}, status=status.HTTP_404_NOT_FOUND)
+
+            ranked_users = []
+            user_details = None
+
+            for rank, member in enumerate(leaderboard_members, start=1):
+                recent_points = 0
+
+                if recent_match:
+                    recent_submission = Submission.objects.filter(
+                        user=member.user, match=recent_match
+                    ).first()
+                    
+                    if recent_submission:
+                        recent_points = recent_submission.submissionScores.get(str(leaderboardID), 0)
+
+                user_info = {
+                    "rank": rank,
+                    "username": member.user.username,
+                    "points": member.points,
+                    "recentGainedPoints": recent_points
+                }
+                ranked_users.append(user_info)
+
+                if member.user.username == username:
+                    user_details = user_info
+
+            if not user_details:
+                return Response({"message": f"User '{username}' not found in this leaderboard"}, status=status.HTTP_404_NOT_FOUND)
+
+            return Response({
+                "leaderboardID": leaderboardID,
+                "leaderboardName": leaderboard.leaderboardName,
+                "userDetails": user_details,
+                "allMembers": ranked_users
+            }, status=status.HTTP_200_OK)
+
+        except Leaderboard.DoesNotExist:
+            return Response({"message": "Leaderboard not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
