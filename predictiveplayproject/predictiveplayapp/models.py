@@ -184,7 +184,7 @@ class Leaderboard(models.Model):
     updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.leaderboardName
+        return f"{self.leaderboardName} - {self.event.eventName}"
 
 
 
