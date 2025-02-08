@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Step 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            width: 300px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Step 2: Join a Leaderboard</h2>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="POST" autocomplete="off">
+            {% csrf_token %}
+            
+            <!-- Hidden dummy fields to trick browsers -->
+            <input type="text" name="fakeuser" style="display:none;">
+            <input type="password" name="fakepass" style="display:none;">
+            
+            <input type="text" name="leaderboardName" placeholder="Leaderboard Name" autocomplete="off" required>
+            <input type="password" name="leaderboardPassword" placeholder="Leaderboard Password" autocomplete="off" required>
+            
+            <button type="submit">Complete Registration</button>
+        </form>
+               
+    </div>
+</body>
+</html>
